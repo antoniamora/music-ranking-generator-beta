@@ -1,95 +1,114 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client"
+
+import { useEffect, useRef, useState } from 'react';
+import { createOpenAI } from '@ai-sdk/openai';
+import { generateText } from "ai";
+import { prompt } from "@/app/prompt.json";
+import useLoader from "@/comps/useLoader";
+
+const openai = createOpenAI({apiKey : process.env.NEXT_PUBLIC_OPENAI_API_KEY});
+const model = openai("gpt-4-turbo");
 
 export default function Home() {
-  return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
+
+  const [Loader, setIsLoad] = useLoader();
+
+  const THEAD = () =>
+  <thead>
+    <tr>
+      <td>N°</td>
+      <td>Año</td>
+      <td>Canción</td>
+      <td>Artista</td>
+      <td>Álbum</td>
+    </tr>
+  </thead>
+
+  const Row = ({ index, year, song, artist, album }) =>
+  <tr>
+    <th>{index}</th>
+    <th>{year}</th>
+    <th>{song}</th>
+    <th>{artist}</th>
+    <th>{album}</th>
+  </tr>;
+
+  const [stats, setStats] = useState([]);
+  const inputRef = useRef(null);
+  const buttonRef = useRef(null);
+
+  const TBODY = () => <tbody>{
+    stats.map(({year, song, artist, album}, i)=><Row key={i+"row"} index={i+1} year={year} song={song} artist={artist} album={album}/>)
+  }</tbody>
+
+  const generar = async(e) =>
+  {
+    try
+    {
+      const userPrompt = inputRef.current.value;
+      if(userPrompt)
+      {
+        buttonRef.current.disabled = true;
+        setIsLoad(false);
+        const { text } = await generateText({
+          model: model,
+          prompt: prompt + 'Tema: ' + userPrompt,
+        });
+
+        const inicio = text.indexOf('[');
+        const fin = text.lastIndexOf(']');
+        
+        if (inicio === -1 || fin === -1) {
+          throw new Error('No se encontró un JSON válido en el texto proporcionado.');
+        }
+      
+        const jsonExtracted = text.substring(inicio, fin + 1);
+
+        const rows = JSON.parse(jsonExtracted);
+        setStats(rows);
+        buttonRef.current.disabled = false;
+        setIsLoad(true);
+      }
+      else
+      {
+        //TODO mensajito emergente de que hay que poner algo
+      }
+    }
+    catch(err)
+    {
+      buttonRef.current.disabled = false;
+      setIsLoad(true);
+      console.error(err)
+    }
+    
+  }
+
+  useEffect(() => {
+    const eventHandler = () => { setIsLoad(true) }
+    window.addEventListener('load', eventHandler)
+    if(document.readyState === "complete") setIsLoad(true);
+    return () => {
+      window.removeEventListener('load', eventHandler)
+    }
+  },[])
+
+  return <main>
+    <section>
+      <h1>Experimenta con tu música</h1>
+      <div>
         <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+          <h2>Descubre nuevas melodías</h2>
+          <div>
+            <input type='text' placeholder='Quiero las canciones más alegres de 1983' ref={inputRef}/>
+            <button onClick={generar} ref={buttonRef}>Generar</button> 
+          </div>
         </div>
+        <table>
+          <THEAD/>
+          <TBODY/>
+        </table>
       </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+    </section>
+    <Loader/> 
+  </main>
 }

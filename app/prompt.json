@@ -1,0 +1,3 @@
+{
+    "prompt" : "Basado en el texto que te proporcionaré a continuación, necesito que me des un top 10 en formato JSON que contenga 10 objetos, cada uno con las propiedades: year, song, artist y album. Esto tiene que ser con sus respectivos valores. Ejemplo: [{\"year\" : \"1967\", \"song\" : \"Strawberry Fields Forever\", \"artist\" : \"The Beatles\", \"album\" : \"Magical Mystery Tour\" },... etc]. Necesito que seas muy estricto formateando el string en JSON y no dándome nada más que ese JSON. Sé creativo, piénsalo paso por paso, respira profundo y hazlo como si fueras experto haciendo top 10 de música."
+}
