@@ -5,6 +5,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from "ai";
 import { prompt } from "@/app/prompt.json";
 import useLoader from "@/comps/useLoader";
+import useAlert from "@/comps/useAlert";
 
 const openai = createOpenAI({apiKey : process.env.NEXT_PUBLIC_OPENAI_API_KEY});
 const model = openai("gpt-4-turbo");
@@ -12,6 +13,7 @@ const model = openai("gpt-4-turbo");
 export default function Home() {
 
   const [Loader, setIsLoad] = useLoader();
+  const [Alert, trigger] = useAlert();
 
   const THEAD = () =>
   <thead>
@@ -55,11 +57,21 @@ export default function Home() {
           prompt: prompt + 'Tema: ' + userPrompt,
         });
 
+        console.log(text, userPrompt)
+
         const inicio = text.indexOf('[');
         const fin = text.lastIndexOf(']');
         
         if (inicio === -1 || fin === -1) {
-          throw new Error('No se encontró un JSON válido en el texto proporcionado.');
+          console.log(text)
+          if(text.includes("false"))
+          {
+            throw new Error("Prompt sin sentido musical")
+          }
+          else
+          {
+            throw new Error('No se encontró un JSON válido en el texto proporcionado.');
+          }
         }
       
         const jsonExtracted = text.substring(inicio, fin + 1);
@@ -71,16 +83,24 @@ export default function Home() {
       }
       else
       {
-        //TODO mensajito emergente de que hay que poner algo
+        inputRef.current.value = 'Quiero las canciones más alegres de 1983';
+        generar();
       }
     }
     catch(err)
     {
+      if(err.message.includes("Prompt sin sentido musical"))
+      {
+        trigger("Debes escribir algo relacionado con un ranking musical");
+      }
+      else
+      {
+        trigger();
+      }
       buttonRef.current.disabled = false;
       setIsLoad(true);
-      console.error(err)
+      console.error(err);
     }
-    
   }
 
   useEffect(() => {
@@ -94,10 +114,10 @@ export default function Home() {
 
   return <main>
     <section>
-      <h1>Experimenta con tu música</h1>
+      <h1>Descubre rankings musicales</h1>
       <div>
         <div>
-          <h2>Descubre nuevas melodías</h2>
+          <h2>¿Con qué listados te gustaría experimentar?</h2>
           <div>
             <input type='text' placeholder='Quiero las canciones más alegres de 1983' ref={inputRef}/>
             <button onClick={generar} ref={buttonRef}>Generar</button> 
@@ -108,6 +128,7 @@ export default function Home() {
           <TBODY/>
         </table>
       </div>
+      <Alert/>
     </section>
     <Loader/> 
   </main>

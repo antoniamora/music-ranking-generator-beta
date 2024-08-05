@@ -1,11 +1,11 @@
-import { useState } from "react"
+import { useState } from "react";
 
 const useLoader = () =>
 {
     const [isLoad, setIsLoad] = useState(false);
 
     const Loader = () => {
-    return !isLoad && <div class="curtain">
+    return !isLoad && <div className="curtain">
             <span>♪</span>
         </div>
     }
