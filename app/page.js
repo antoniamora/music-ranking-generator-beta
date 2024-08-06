@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText } from "ai";
-import { prompt } from "@/app/prompt.json";
+import { prompt } from "@/consts/prompt.json";
 import useLoader from "@/comps/useLoader";
 import useAlert from "@/comps/useAlert";
+import useSpotify from "@/comps/useSpotify"
 
 const openai = createOpenAI({apiKey : process.env.NEXT_PUBLIC_OPENAI_API_KEY});
 const model = openai("gpt-4-turbo");
@@ -14,6 +15,7 @@ export default function Home() {
 
   const [Loader, setIsLoad] = useLoader();
   const [Alert, trigger] = useAlert();
+  const go = useSpotify();
 
   const THEAD = () =>
   <thead>
@@ -27,7 +29,7 @@ export default function Home() {
   </thead>
 
   const Row = ({ index, year, song, artist, album }) =>
-  <tr>
+  <tr onClick={() => {go(song)}}>
     <th>{index}</th>
     <th>{year}</th>
     <th>{song}</th>
@@ -40,7 +42,9 @@ export default function Home() {
   const buttonRef = useRef(null);
 
   const TBODY = () => <tbody>{
-    stats.map(({year, song, artist, album}, i)=><Row key={i+"row"} index={i+1} year={year} song={song} artist={artist} album={album}/>)
+    stats
+    .map(({year, song, artist, album}, i)=>
+    <Row key={i+"row"} index={i+1} year={year} song={song} artist={artist} album={album}/>)
   }</tbody>
 
   const generar = async(e) =>
@@ -96,6 +100,7 @@ export default function Home() {
       else
       {
         trigger();
+        console.error(err)
       }
       buttonRef.current.disabled = false;
       setIsLoad(true);
