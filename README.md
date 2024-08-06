@@ -20,7 +20,7 @@ Esta aplicación de Next.js permite a los usuarios descubrir rankings musicales 
 
 ```bash
 git clone https://github.com/antoniamora/music-ranking-generator-beta
-cd descubre-rankings-musicales
+cd music-ranking-generator-beta
 ```
 
 2. Instala las dependencias
